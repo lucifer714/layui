@@ -28,6 +28,7 @@ toc: true
 | [table.reload(id, options, deep)](#table.reload) | 表格完整重载。  |
 | [table.reloadData(id, options, deep)](#table.reloadData) <sup>2.7+</sup> | 表格数据重载。 |
 | [table.renderData(id)](#table.renderData) <sup>2.8.5+</sup> | 重新渲染数据。 |
+| [table.updateRow(id, opts)](#table.updateRow) <sup>2.9.4+</sup> | 更新指定行数据。 |
 | [table.checkStatus(id)](#table.checkStatus) | 获取选中行相关数据。  |
 | [table.setRowChecked(id, opts)](#table.setRowChecked) <sup>2.8+</sup> | 设置行选中状态。 |
 | [table.getData(id)](#table.getData) | 获取当前页所有行表格数据。 |
@@ -313,6 +314,41 @@ data.splice(newIndex, 0, item[0]);
 table.renderData('test');
 ```
 
+<h3 id="table.updateRow" lay-pid="api" class="ws-anchor ws-bold">更新指定行数据 <sup>2.9.4+</sup></h3>
+
+`table.updateRow(id, opts);`
+- 参数 `id` : table 渲染时的 `id` 属性值
+- 参数 `opts` : 更新指定行时的可选属性，详见下表
+
+| opts | 描述 | 类型 | 默认值 |
+| --- | --- | --- | --- |
+| index | 行索引 | number | - |
+| data | 行数据 | object | - |
+| related | 是否更新其他包含自定义模板且可能有所关联的列视图 | boolean/function | - |
+
+该方法用于更新指定行数据。
+
+```js
+// 渲染
+table.render({
+  elem: '', // 绑定元素选择器
+  id: 'test', // 自定义 id 索引
+  // 其他属性 …
+});
+
+// 更新指定行数据
+table.updateRow('test', {
+  index: 0,
+  data: {
+    id: 1,
+    username: 'name'
+  }
+  // 是否更新关联的列视图
+  related: function(field, index){
+    return ['score', '5'].indexOf(field) !== -1;
+  }
+});
+```
 
 <h3 id="table.checkStatus" lay-pid="api" class="ws-anchor ws-bold">获取选中行</h3>
 
@@ -331,9 +367,10 @@ table.render({
 
 // 获取选中行相关数据
 var tableStatus = table.checkStatus('test');
-console.log(checkStatus.data) // 选中行的数据
-console.log(checkStatus.data.length) // 选中行数量，可作为是否有选中行的条件
-console.log(checkStatus.isAll ) // 表格是否全选
+console.log(tableStatus.data) // 选中行的数据
+console.log(tableStatus.data.length) // 选中行数量，可作为是否有选中行的条件
+console.log(tableStatus.dataCache) // 选中的原始缓存数据，包含内部特定字段 --- 2.9.17+
+console.log(tableStatus.isAll ) // 表格是否全选
 ```
 
 <h3 id="table.setRowChecked" lay-pid="api" class="ws-anchor ws-bold">设置行选中状态 <sup>2.8+</sup></h3>
@@ -345,8 +382,8 @@ console.log(checkStatus.isAll ) // 表格是否全选
 | opts | 描述 | 类型 | 默认值 |
 | --- | --- | --- | --- |
 | type | 选中方式。可选值: `checkbox,radio`  | string | `checkbox` |
-| index | 选中行的下标。支持以下几种情况：<ul><li>若值为 `number` 类型，则表示行所在的数组下标（`0` 开头）</li><li>若值为 `array` 类型 <sup>2.9.1+</sup>，则表示批量下标。</li><li>若值为 `string` 类型，则可设置 `all` 操作全选。</li></ul> | number<br>array<br>string | - |
-| checked | 选中状态值。 <ul><li>若传递该属性，则赋值固定值。</li><li>若不传递该属性（默认），则 `checkbox` 将在 `true\|false` 中自动切换值，而 `radio` 将赋值 `true` 固定值。<sup>2.8.4+</sup></li></ul> | boolean | - |
+| index | 选中行的下标。支持以下几种情况：<ul><li>若值为 `number` 类型，则表示行所在的数组下标（`0` 开头）</li><li>若值为 `array` 类型 <sup>2.9.1+</sup>，则表示多选下标。</li><li>若值为 `string` 类型，则可设置 `all` 操作全选。</li></ul> | number<br>array<br>string | - |
+| checked | 选中状态值。 <ul><li>若传递该属性，则赋值固定值。</li><li>若不传递该属性（默认），则 `checkbox` 将在 `true\|false` 中自动切换值，而 `radio` 将赋值 `true` 固定值。<sup>2.8.4+</sup><br>**注意**：若 `index` 指定为多选或全选，`checked` 应当显式传递固定值</li></ul> | boolean | - |
 
 该方法用于设置行的选中样式及相关的特定属性值 `LAY_CHECKED`。
 
@@ -732,17 +769,24 @@ table.render({
 });
  
 // 行单击事件
-table.on('row(test)', function(obj){
+table.on('row(test)', function(obj) {
   var data = obj.data; // 得到当前行数据
   var dataCache = obj.dataCache; // 得到当前行缓存数据，包含特定字段 --- 2.8.8+
   var index = obj.index; // 得到当前行索引
   var tr = obj.tr; // 得到当前行 <tr> 元素的 jQuery 对象
   var options = obj.config; // 获取当前表格基础属性配置项
-  console.log(obj); // 查看对象所有成员
+  var e = obj.e; // 当前的 jQuery 事件对象 --- 2.9.14+
+
+  console.log('onrow', obj); // 查看返回对象的所有成员
   
   // obj.del() // 删除当前行
   // obj.update(fields, related);  // 修改行数据
   // obj.setRowChecked(opts); // 设置行选中状态
+});
+
+// 行双击事件
+table.on('rowDouble(test)', function(obj) {
+  console.log('onrowDouble', obj); // 查看返回对象的所有成员 - 同 row 事件
 });
 ```
 
@@ -752,8 +796,8 @@ table.on('row(test)', function(obj){
 
 右键单击行时触发。
 
-<pre class="layui-code" lay-options="{preview: true, codeStyle: 'height: 508px;', layout: ['code', 'preview'], tools: ['full'], toolsEvent: function(oi, type){
-  if(type === 'full'){
+<pre class="layui-code" lay-options="{preview: true, codeStyle: 'height: 508px;', layout: ['code', 'preview'], tools: ['full'], toolsEvent: function(obj){
+  if(obj.type === 'full'){
     layui.table.resize('ID-table-onrowContextmenu');
   }
 }}">

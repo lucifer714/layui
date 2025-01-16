@@ -26,17 +26,17 @@ const config = {
 // 获取参数
 const argv = minimist(process.argv.slice(2), {
   default: {
-    version: pkg.version
+    vs: pkg.version
   }
 });
 
-const rlsFileName = `${pkg.name}-v${pkg.version}`; // 发行文件名
+const rlsFileName = `${pkg.name}-v${argv.vs}`; // 发行文件名
 const rlsDest = `./release/zip/${rlsFileName}/${pkg.name}`; // 发行目标路径
 const rlsDirname = path.dirname(rlsDest); // 发行目录名
 
 // 复制目标路径
 const copyDest = argv.dest
-  ? path.join(argv.dest, (argv.vs ? '/' + pkg.version : ''))
+  ? path.join(argv.dest, (argv.vs ? '/' + argv.vs : ''))
 : rlsDest;
 
 // 打包目标路径
@@ -97,7 +97,7 @@ exports.cp = gulp.series(() => del(copyDest), () => {
 
   // 复制 css js
   gulp.src(`${src}.{css,js}`)
-  .pipe(replace(/\n\/(\*|\/)\#[\s\S]+$/, '')) // 过滤 css 和 js 的 map 特定注释
+  .pipe(replace(/\n\/(\*|\/)\#[\s\S]+$/, '')) // 过滤 css,js 的 map 特定注释
   .pipe(gulp.dest(copyDest));
 
   // 复制其他文件
@@ -105,7 +105,7 @@ exports.cp = gulp.series(() => del(copyDest), () => {
     src,
     `!${src}.{css,js,map}` // 过滤 map 文件
   ])
-  .pipe(replace(/\n\/(\*|\/)\#[\s\S]+$/, '')) // 过滤 css 和 js 的 map 特定注释
+  .pipe(replace(/\n\/(\*|\/)\#[\s\S]+$/, '')) // 过滤 css,js 的 map 特定注释
   .pipe(gulp.dest(copyDest));
 });
 
@@ -116,7 +116,8 @@ exports.release = gulp.series(
     return gulp.src('./release/introduce/**/*')
     .pipe(replace(/[^'"]+(\/layui\.css)/, 'layui/css$1')) // 替换 css 引入路径中的本地 path
     .pipe(replace(/[^'"]+(\/layui\.js)/, 'layui$1')) // 替换 js 引入路径中的本地 path
-    .pipe(gulp.dest(rlsDirname));
+    .pipe(gulp.dest(rlsDirname)) // 用于本地
+    .pipe(gulp.dest('./examples/introduce')); // 用于 Github actions
   },
   exports.cp, // 复制 dist 目录文件
   () => { // 生成 ZIP 压缩包
@@ -149,6 +150,6 @@ exports.help = () => {
     '  default  默认任务',
     '  release  发行任务',
     '  cp  将 dist 目录复制一份到参数 --dest 指向的目录'
-  ].join('\n'), '\n\nExamples:\n  gulp cp --dest ./v --vs', '\n');
+  ].join('\n'), '\n\nExamples:\n  gulp cp --dest ./v', '\n');
   return gulp.src('./');
 };

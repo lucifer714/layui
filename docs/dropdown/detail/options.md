@@ -63,6 +63,20 @@
 </td>
     </tr>
     <tr>
+<td>closeOnClick <sup>2.9.18+</sup></td>
+<td>
+  
+下拉面板打开后，再次点击目标元素时是否关闭该面板。
+
+</td>
+<td>boolean</td>
+<td>
+
+`true`
+
+</td>
+    </tr>
+    <tr>
 <td>show</td>
 <td>
   
@@ -140,13 +154,16 @@
 <td>delay</td>
 <td>
   
-延迟关闭的毫秒数。当 `trigger: 'hover'` 时才生效
+延迟触发的毫秒数。当 `trigger: 'hover'` 时才生效。示例：
+
+- `delay: 300` : 表示显示与隐藏的延迟时间均为 300 毫秒
+- `delay: [200, 300]` <sup>2.9.2+</sup> : 数组成员值分别表示显示延迟时间和隐藏延迟时间
 
 </td>
-<td>number</td>
+<td>number/array</td>
 <td>
 
-`300`
+`[200, 300]`
 
 </td>
     </tr>
@@ -285,10 +302,11 @@ ready: function(elemPanel, elem){
 </div>
 
 ```
-click: function(data, othis){
+click: function(data, othis, event){
   console.log(data); // 当前所点击的菜单项对应的数据
   console.log(othis); // 当前所点击的菜单项元素对象
   console.log(this.elem); // 当前组件绑定的目标元素对象，批量绑定中常用
+  console.log(event); // 事件对象 2.9.18+
   
   // 若返回 false，则点击选项可不关闭面板 --- 2.8+
   /*
@@ -298,6 +316,36 @@ click: function(data, othis){
 ```
 
 用法详见：[#示例](#examples)
+
+</td>
+    </tr>
+    <tr>
+<td>close <sup>2.9.7+</sup></td>
+<td colspan="3">
+  
+面板关闭后的回调函数。返回的参数如下：
+
+```
+close: function(elem){
+  console.log(elem); // 当前组件绑定的目标元素对象
+}   
+```
+
+</td>
+    </tr>
+    <tr>
+<td>onClickOutside <sup>2.9.18+</sup></td>
+<td colspan="3">
+  
+点击 dropdown 外部时的回调函数，返回 `false` 可阻止关闭。
+
+```
+onClickOutside: function(event){
+  // 参数 event 即为当前点击的事件对象
+  // …
+  // return false; // 若返回 false，当点击面板外部时可阻止关闭
+}   
+```
 
 </td>
     </tr>
