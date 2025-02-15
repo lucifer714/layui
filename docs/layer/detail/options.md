@@ -153,7 +153,7 @@ layer.open({
 <td>maxWidth</td>
 <td>
   
-弹层的最大宽度。当 `area` 属性值为默认的 `auto'` 时有效。
+弹层的最大宽度。当 `area` 属性设置宽度自适应时有效。
 
 </td>
 <td>number</td>
@@ -167,7 +167,7 @@ layer.open({
 <td>maxHeight</td>
 <td>
   
-弹层的最大高度。当 `area` 属设置高度自适应时有效。
+弹层的最大高度。当 `area` 属性设置高度自适应时有效。
 
 </td>
 <td>number</td>
@@ -391,6 +391,53 @@ layer.open({
 <td>
 
 `r`
+
+</td>
+    </tr>
+    <tr>
+<td>
+
+[btnAsync](#options.btnAsync) <sup>2.9.12+</sup>
+
+</td>
+<td>
+  
+<div id="options.btnAsync" lay-pid="options" class="ws-anchor">
+
+异步按钮。开启之后，除 `layer.prompt` 的按钮外，按钮回调的返回值将支持 `boolean | Promise<boolean> | JQueryDeferred<boolean>` 类型，返回 `false` 或 `Promise.reject` 时阻止关闭。
+
+注意，此时 `yes` 和 `btn1`(两者等效) 回调的默认行为发生了变化，即由触发时不关闭弹层变为关闭弹层。
+
+</div>
+
+```
+var sleep = function (time) {
+  return $.Deferred(function (defer) {
+    setTimeout(function () {
+      defer.resolve();
+    }, time)
+  })
+}
+// 下面以 confirm 层为例
+layer.confirm('一个询问框的示例？', {
+    btnAsync: true,
+    btn: ['确定', '关闭'] // 按钮
+  }, 
+  function (index, layero, that) {
+    var defer = $.Deferred();
+    // 注: that.loading() 仅 btnAsync 开启后支持，参数为 boolean 类型，表示打开或关闭按钮的加载效果。
+    that.loading(true);
+    sleep(1000).then(defer.resolve);
+    return defer.promise();
+  }
+);
+```
+
+</td>
+<td>boolean</td>
+<td>
+
+`false`
 
 </td>
     </tr>
@@ -724,6 +771,41 @@ layer.open({
       layer.close(index);
     }
     return false; // 阻止默认关闭行为
+  }
+});  
+```
+
+</td>
+    </tr>
+    <tr>
+<td>
+
+[beforeEnd](#options.beforeEnd) <sup>2.9.11+</sup>
+
+</td>
+<td colspan="3">
+  
+<div id="options.beforeEnd" lay-pid="options" class="ws-anchor">
+弹层被关闭前的回调函数。如果返回 false 或者 Promise.reject，将会取消关闭操作。
+</div>
+
+```
+layer.open({
+  content: '<div style="padding: 32px;"><input id="id"/></div>',
+  /** @type {(layero: JQuery, index: number) => boolean | JQueryDeferred<boolean> | Promise<boolean>} */
+  beforeEnd: function(layero, index, that){
+    return $.Deferred(function(defer){
+      var el = layero.find('#id');
+      var val = el.val().trim();
+      if(val){
+        layer.confirm('关闭后您填写的内容将不会得到保存，确定关闭吗？', function (i) {
+          layer.close(i);
+          defer.resolve(true)
+        });
+      }else{
+        defer.resolve(true)
+      }
+    }).promise();
   }
 });  
 ```

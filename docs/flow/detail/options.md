@@ -53,6 +53,20 @@
 </td>
     </tr>
     <tr>
+<td>moreText <sup>2.9.11+</sup></td>
+<td>
+
+设置「加载更多」按钮的文本
+
+</td>
+<td>string</td>
+<td>
+
+<code style="font-size: 13px;">加载更多</code>
+
+</td>
+    </tr>
+    <tr>
 <td>end</td>
 <td>
   
@@ -101,6 +115,18 @@ layui.each(data, function(index, item){
 `50`
 
 </td>
+    </tr>
+    <tr>
+<td>direction <sup>2.9.7+</sup></td>
+<td>
+  
+指定触发加载的方向，可选值：
+- `bottom` 滚动容器底部触发加载
+- `top` 滚动容器顶部触发加载
+
+</td>
+<td>string</td>
+<td>'bottom'</td>
     </tr>
     <tr>
 <td>done</td>

@@ -74,6 +74,11 @@ data: {
 data: {
   id: function(){
     return $('#id').val();
+  },
+  id2: function(index, file){ // 参数支持。2.9.3+ 
+    // 注：当 unified:true 和 ie8/9 下，参数无效
+    console.log(index); // 得到文件索引
+    console.log(file); // 得到文件对象
   }
 }
 ```
@@ -351,6 +356,9 @@ choose: function(obj){
     // delete files[index]; //删除列表中对应的文件，一般在某个事件中使用
   });
 }
+
+// 获取本次选取的文件，大文件建议用此方法获取文件信息(2.9.9+)
+obj.getChooseFiles();
 ```
 
 详细用法参考：[#示例](#demo-files-table)
@@ -379,6 +387,38 @@ before: function(obj){ // obj 参数同 choose
     return false;
   }
   */
+}
+
+// 返回 jQuery Deferred 对象或 JS 原生 Promise 对象，false 或 Promise.reject 表明阻止上传(2.9.11+)
+// Promise
+/** @type {(obj: object) => boolean | JQueryDeferred<boolean> | Promise<boolean>} */
+before: function(obj){
+  return new Promise(function(resolve, reject){
+    setTimeout(function(){
+      console.log('before_async_task', obj);
+      resolve(true);
+    }, 1000)
+  })
+}
+
+// Deferred
+before: function(obj){
+  return $.Deferred(function(defer){
+    setTimeout(function(){
+      console.log('before_async_task', obj);
+      defer.resolve(true);
+    }, 1000)
+  }).promise();
+}
+
+// Deferred2
+before: function(obj){
+  var defer = $.Deferred();
+  setTimeout(function(){
+    console.log('before_async_task', obj);
+    defer.resolve(true);
+  }, 1000)
+  return defer.promise();
 }
 ```
 
@@ -472,12 +512,19 @@ allDone: function(obj){
 <td>error</td>
 <td colspan="3">
   
-执行上传请求出现异常的回调（一般为网络异常、URL 404等）。返回两个参数如下：
+执行上传请求出现异常的回调（一般为网络异常、URL 404等）。返回三个参数如下：
+- `index`： 当前文件的索引
+- `upload`： 重新上传的方法
+- `res`： 返回值（纯文本）<sup>2.9.12+</sup>
+- `xhr`: jQuery XHR 对象 <sup>2.9.15+</sup>
 
 ```
-error: function(index, upload){
+error: function(index, upload, res, xhr){
   console.log(index); // 当前文件的索引
   // upload(); 重新上传的方法
+  console.log(res);  // 返回值（纯文本）
+  console.log(JSON.parse(res));  // 返回值（json）
+  console.log(xhr);
 }
 ```
 

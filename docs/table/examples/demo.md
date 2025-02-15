@@ -36,7 +36,7 @@
   </div>
 !}}</script>
  
-<script type="text/html" id="barDemo">
+<script type="text/html" id="toolDemo">
   <div class="layui-clear-space">
     <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
     <a class="layui-btn layui-btn-xs" lay-event="more">
@@ -57,10 +57,13 @@ layui.use(['table', 'dropdown'], function(){
     elem: '#test',
     url: '/static/json/2/table/demo1.json', // 此处为静态模拟数据，实际使用时需换成真实接口
     toolbar: '#toolbarDemo',
-    defaultToolbar: ['filter', 'exports', 'print', {
+    defaultToolbar: ['filter', 'exports', 'print', { // 右上角工具图标
       title: '提示',
       layEvent: 'LAYTABLE_TIPS',
-      icon: 'layui-icon-tips'
+      icon: 'layui-icon-tips',
+      onClick: function(obj) { // 2.9.12+
+        layer.alert('自定义工具栏图标按钮');
+      }
     }],
     height: 'full-35', // 最大高度减去其他容器已占有的高度差
     css: [ // 重设当前表格样式
@@ -71,7 +74,7 @@ layui.use(['table', 'dropdown'], function(){
     page: true,
     cols: [[
       {type: 'checkbox', fixed: 'left'},
-      {field:'id', fixed: 'left', width:80, title: 'ID', sort: true, totalRowText: '合计：'},
+      {field:'id', fixed: 'left', width:80, title: 'ID', sort: true, totalRow: '合计：'},
       {field:'username', width:80, title: '用户'},
       {field:'email', title:'邮箱 <i class="layui-icon layui-icon-tips layui-font-14" lay-event="email-tips" title="该字段开启了编辑功能" style="margin-left: 5px;"></i>', fieldTitle: '邮箱', hide: 0, width:150, expandedMode: 'tips', edit: 'text'},
       {field:'sex', width:80, title: '性别', sort: true},
@@ -80,7 +83,7 @@ layui.use(['table', 'dropdown'], function(){
       {field:'checkin', title:'打卡', width: 100, sort: true, totalRow: '{{!{{= parseInt(d.TOTAL_NUMS) }} 次!}}'},
       {field:'ip', title:'IP', width: 120},
       {field:'joinTime', title:'加入时间', width: 120},
-      {fixed: 'right', title:'操作', width: 134, minWidth: 125, toolbar: '#barDemo'}
+      {fixed: 'right', title:'操作', width: 134, minWidth: 125, templet: '#toolDemo'}
     ]],
     done: function(){
       var id = this.id;
@@ -161,7 +164,7 @@ layui.use(['table', 'dropdown'], function(){
                 /*{{!
                 cols: [[ // 重置表头
                   {type: 'checkbox', fixed: 'left'},
-                  {field:'id', title:'ID', width:80, fixed: 'left', unresize: true, sort: true, totalRowText: '合计：'},
+                  {field:'id', title:'ID', width:80, fixed: 'left', unresize: true, sort: true, totalRow: '合计：'},
                   {field:'sex', title:'性别', width:80, edit: 'text', sort: true},
                   {field:'experience', title:'积分', width:80, sort: true, totalRow: true, templet: '<div>{{= d.experience }} 分</div>'},
                   {field:'logins', title:'登入次数', width:100, sort: true, totalRow: true},
@@ -259,15 +262,12 @@ layui.use(['table', 'dropdown'], function(){
       case 'getCheckData':
         var data = checkStatus.data;
         layer.alert(layui.util.escape(JSON.stringify(data)));
-      break;
+        break;
       case 'getData':
         var getData = table.getData(id);
         console.log(getData);
         layer.alert(layui.util.escape(JSON.stringify(getData)));
-      break;
-      case 'LAYTABLE_TIPS':
-        layer.alert('自定义工具栏图标按钮');
-      break;
+        break;
     };
   });
 
@@ -316,11 +316,19 @@ layui.use(['table', 'dropdown'], function(){
             });
           } 
         },
+        id: 'dropdown-table-tool',
         align: 'right', // 右对齐弹出
         style: 'box-shadow: 1px 1px 10px rgb(0 0 0 / 12%);' // 设置额外样式
-      })
+      });
     }
   });
+
+  // table 滚动时移除内部弹出的元素
+  var tableInst = table.getOptions('test');
+  tableInst.elem.next().find('.layui-table-main').on('scroll', function() {
+    dropdown.close('dropdown-table-tool');
+  });
+
  
   // 触发表格复选框选择
   table.on('checkbox(test)', function(obj){
